@@ -6,7 +6,7 @@
 <title>Реалистичные 3D кубики с вращением и полетом</title>
 <style>
   body {
-    background: #222;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -14,6 +14,12 @@
     height: 100vh;
     margin: 0;
     font-family: Arial, sans-serif;
+    color: #fff;
+  }
+  .balance {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 2px #000;
   }
   .dice-container {
     display: flex;
@@ -31,7 +37,6 @@
     position: relative;
     transform-style: preserve-3d;
   }
-  /* Грани кубика */
   .face {
     position: absolute;
     width: 100px;
@@ -53,19 +58,15 @@
   .top    { transform: rotateX(90deg) translateZ(50px); }
   .bottom { transform: rotateX(-90deg) translateZ(50px); }
 
-  /* Анимация полета и вращения */
   @keyframes flyAndRotate {
     0% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
     50% { transform: translateY(-150px) rotateX(1080deg) rotateY(1800deg); }
     100% { transform: translateY(0) rotateX(1440deg) rotateY(2160deg); }
   }
-
-  /* Класс для запуска анимации */
   .fly-rotate {
-    animation: flyAndRotate 2s ease forwards;
+    animation: flyAndRotate 1.2s ease forwards;
   }
 
-  /* Кнопка */
   button {
     padding: 12px 25px;
     font-size: 1.2em;
@@ -79,7 +80,6 @@
   button:hover {
     background: #45a049;
   }
-  /* Результат */
   .result {
     margin-top: 20px;
     font-size: 1.5em;
@@ -88,6 +88,8 @@
 </style>
 </head>
 <body>
+
+<div class="balance" id="balanceDisplay">Баланс: 0 ₽</div>
 
 <div class="dice-container">
   <div class="scene">
@@ -113,14 +115,23 @@
 </div>
 
 <button id="rollBtn">Подбросить</button>
-<div class="result" id="result">Общая сумма: 2</div>
+<div class="result" id="result">Общая сумма: 0</div>
 
 <script>
+// Блокировка Ctrl+колесика
+document.addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+
+// Объявление переменных
 const cube1 = document.querySelector('#cube1');
 const cube2 = document.querySelector('#cube2');
 const resultEl = document.getElementById('result');
 const btn = document.getElementById('rollBtn');
+const balanceDisplay = document.getElementById('balanceDisplay');
 
+// Звук анимации кубика
+const diceSound = new Audio('https://github.com/SaweNap/dfkgdkfhgdkfgkubiki/raw/main/кубик.mp3');
+
+// Массив точек для сторон кубика
 const sidesPoints = {
   1: [[0,0]],
   2: [[-0.6,0.6], [0.6,-0.6]],
@@ -130,13 +141,16 @@ const sidesPoints = {
   6: [[-0.6,0.6], [-0.6,0], [-0.6,-0.6], [0.6,0.6], [0.6,0], [0.6,-0.6]],
 };
 
+// Функция для генерации случайного числа 1-6
 function getRandomNumber() {
   return Math.ceil(Math.random() * 6);
 }
 
+// Функция для установки точек на лицах кубика
 function setFacePoints(cubeId, faceClass, number) {
   const face = document.querySelector(`#${cubeId} .${faceClass}`);
   face.innerHTML = '';
+  if (number === 0) return;
   const points = sidesPoints[number];
   const dotSize = 8;
   const offset = 30;
@@ -153,37 +167,70 @@ function setFacePoints(cubeId, faceClass, number) {
   });
 }
 
+// Функция для броска кубиков с анимацией и звуком
 function throwCubes() {
-  // Очищаем эффекты
+  // Воспроизведение звука
+  diceSound.currentTime = 0;
+  diceSound.play().catch(e => { console.log('Ошибка воспроизведения звука', e); });
+  
+  // Очистка и подготовка кубиков
   [cube1, cube2].forEach(cube => {
     cube.style.transition = 'none';
     cube.classList.remove('fly-rotate');
+    setFacePoints(cube.id, 'front', 0);
+    cube.style.backgroundColor = '#fff';
+  });
+  // Запуск анимации
+  [cube1, cube2].forEach(cube => {
     setTimeout(() => {
       cube.classList.add('fly-rotate');
     }, 50);
   });
-
+  // В середине анимации
   setTimeout(() => {
     const num1 = getRandomNumber();
     const num2 = getRandomNumber();
-
     setFacePoints('cube1', 'front', num1);
     setFacePoints('cube2', 'front', num2);
-
     document.getElementById('result').textContent = 'Общая сумма: ' + (num1 + num2);
-  }, 2000);
+  }, 600);
 }
 
-btn.addEventListener('click', throwCubes);
-
-// Изначально показываем случайные
+// Изначально кубики и сумма
 setTimeout(() => {
-  const init1 = getRandomNumber();
-  const init2 = getRandomNumber();
-  setFacePoints('cube1', 'front', init1);
-  setFacePoints('cube2', 'front', init2);
-  document.getElementById('result').textContent = 'Общая сумма: ' + (init1 + init2);
+  setFacePoints('cube1', 'front', 0);
+  setFacePoints('cube2', 'front', 0);
+  document.getElementById('result').textContent = 'Общая сумма: 0';
 }, 100);
+
+// Обновление баланса
+function updateBalanceDisplay(balance) {
+  document.getElementById('balanceDisplay').innerText = 'Баланс: ' + balance + ' ₽';
+}
+
+// Получение и установка баланса из URL и JSON
+(function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const userId = urlParams.get('id');
+  if (userId) {
+    fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(users => {
+        const user = users.find(u => u.id.toString()===userId.toString());
+        if (user) {
+          updateBalanceDisplay(user.balance || 0);
+        } else {
+          updateBalanceDisplay(0);
+        }
+      })
+      .catch(() => { updateBalanceDisplay(0); });
+  } else {
+    updateBalanceDisplay(0);
+  }
+})();
+
+// Обработчик кнопки
+document.getElementById('rollBtn').addEventListener('click', throwCubes);
 </script>
 </body>
 </html>
