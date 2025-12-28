@@ -3,74 +3,33 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Реалистичные 3D кубики с вращением и полетом</title>
+<title>Игры: Баланс и Молния + Кубики</title>
 <style>
   body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #1e3c72, #2a5298);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: start;
-    height: 100vh;
-    margin: 0;
-    padding-top: 20px;
-    font-family: Arial, sans-serif;
     color: #fff;
+    margin: 0;
+    padding: 20px;
   }
-  #balanceContainer {
+  .balance {
     font-size: 1.5em;
     margin-bottom: 10px;
+    text-shadow: 1px 1px 2px #000;
+    text-align: center;
   }
-  #betSection {
+  h1 {
     margin-bottom: 10px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
+    font-size: 2em;
+    text-align: center;
+    text-shadow: 1px 1px 3px #000;
   }
-  #betSection input {
-    padding: 8px;
-    font-size: 1.2em;
-    width: 150px;
-    border-radius: 5px;
-    border: none;
-  }
-  #betSection button {
-    padding: 10px 20px;
-    font-size: 1.2em;
-    border: none;
-    border-radius: 5px;
-    background-color: #4CAF50;
-    color: #fff;
-    cursor: pointer;
-  }
-  #betSection button:hover {
-    background-color: #45a049;
-  }
-  /* Ввод числа для ставки на число */
-  #numberBetContainer {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  #numberBetContainer input {
-    padding: 8px;
-    font-size: 1.2em;
-    width: 150px;
-    border-radius: 5px;
-    border: none;
-  }
-  #numberBetContainer select {
-    padding: 8px;
-    font-size: 1.2em;
-    border-radius: 5px;
-    border: none;
-  }
-  /* Кубики */
+  /* Общие стили для блока с кубиками */
   .dice-container {
     display: flex;
     gap: 20px;
     margin-bottom: 20px;
+    justify-content: center;
   }
   .scene {
     width: 100px;
@@ -96,7 +55,7 @@
     font-size: 1.5em;
     font-weight: bold;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-    position: relative;
+    color: black;
   }
   .front  { transform: rotateY(0deg) translateZ(50px); }
   .back   { transform: rotateY(180deg) translateZ(50px); }
@@ -113,42 +72,67 @@
   .fly-rotate {
     animation: flyAndRotate 1.2s ease forwards;
   }
+  
+  /* Стиль для современных кнопок */
   button {
     padding: 12px 25px;
     font-size: 1.2em;
     cursor: pointer;
     border: none;
-    background: #4CAF50;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #6a11cb, #2575fc);
     color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
   }
   button:hover {
-    background: #45a049;
+    background: linear-gradient(45deg, #2575fc, #6a11cb);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
   }
+  button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
   #result {
+    margin-top: 20px;
     font-size: 1.5em;
-    margin-top: 10px;
+    text-align: center;
+  }
+  /* Ввод ставки и числа */
+  #bet-input, #number-input {
+    display: block;
+    margin: 10px auto;
+    padding: 12px 20px;
+    font-size: 1.2em;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    width: 200px;
+  }
+  #start-game-btn {
+    display: block;
+    margin: 10px auto;
+  }
+  #rollBtn {
+    display: block;
+    margin: 10px auto;
   }
 </style>
 </head>
 <body>
 
-<div id="balanceContainer">Баланс: <span id="userBalance">0</span> ₽</div>
+<!-- Добавляем аудио для звука кубика -->
+<audio id="diceSound" src="https://github.com/SaweNap/dfkgdkfhgdkfgkubiki/blob/main/кубик.mp3" preload="auto"></audio>
 
-<!-- Ввод ставки -->
-<div id="betSection">
-  <input type="number" id="betAmount" placeholder="Сумма ставки" />
-  <button id="placeBetBtn">Сделать ставку</button>
-</div>
+<div class="balance" id="balanceDisplay">Баланс: 0 ₽</div>
+<input type="number" id="bet-input" placeholder="Введите ставку" min="1" />
+<input type="number" id="number-input" placeholder="От 1 до 12" min="1" max="12" />
+<button id="start-game-btn">Начать игру</button>
+<div id="message"></div>
 
-<!-- Ввод на какое число ставлю -->
-<div id="numberBetContainer">
-  <input type="number" id="numberBet" placeholder="На число 1-6" min="1" max="6" />
-  <button id="placeNumberBetBtn">Сделать ставку на число</button>
-</div>
-
-<!-- Кубики -->
 <div class="dice-container">
   <div class="scene">
     <div class="cube" id="cube1">
@@ -171,169 +155,198 @@
     </div>
   </div>
 </div>
-
 <button id="rollBtn">Подбросить</button>
-<div id="result">Общая сумма: 0</div>
-
-<!-- Звук кубика -->
-<audio id="diceSound" src="https://raw.githubusercontent.com/SaweNap/dfkgdkfhgdkfgkubiki/main/кубик.mp3" preload="auto"></audio>
+<div class="result" id="result">Общая сумма: 0</div>
 
 <script>
-const userId = new URLSearchParams(window.location.search).get('id');
-let userBalance = 0;
+const GITHUB_TOKEN = 'тут ваш токен'; // вставьте свой токен
+const GITHUB_REPO = 'SaweNap/dfjghdfifgJSON';
+const FILE_PATH = 'users.json';
 
-// Загрузка баланса
-if (userId) {
-  fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
-    .then(res => res.ok ? res.json() : Promise.reject())
-    .then(users => {
-      const user = users.find(u => u.id.toString() === userId);
-      if (user) {
-        userBalance = user.balance || 0;
-        document.getElementById('userBalance').textContent = userBalance;
-      } else {
-        alert('Пользователь не найден');
-      }
-    })
-    .catch(() => alert('Ошибка загрузки данных'));
-} else {
-  alert('Пользователь не найден');
+const balanceDisplay = document.getElementById('balanceDisplay');
+const messageEl = document.getElementById('message');
+const betInput = document.getElementById('bet-input');
+const numberInput = document.getElementById('number-input');
+
+const cube1 = document.querySelector('#cube1');
+const cube2 = document.querySelector('#cube2');
+const resultEl = document.getElementById('result');
+const startGameBtn = document.getElementById('start-game-btn');
+const rollBtn = document.getElementById('rollBtn');
+
+const sidesPoints = {
+  1: [[0,0]],
+  2: [[-0.6,0.6], [0.6,-0.6]],
+  3: [[-0.6,0.6], [0,0], [0.6,-0.6]],
+  4: [[-0.6,0.6], [-0.6,-0.6], [0.6,0.6], [0.6,-0.6]],
+  5: [[-0.6,0.6], [-0.6,-0.6], [0,0], [0.6,0.6], [0.6,-0.6]],
+  6: [[-0.6,0.6], [-0.6,0], [-0.6,-0.6], [0.6,0.6], [0.6,0], [0.6,-0.6]],
+};
+
+let currentUser = { id: 'test', balance: 0 };
+let userId = null;
+let users = [];
+let gameInProgress = false;
+
+// Загрузка баланса из users.json
+async function loadUserBalance() {
+  const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${FILE_PATH}`;
+  const response = await fetch(url);
+  if (response.ok) {
+    users = await response.json();
+    const user = users.find(u => u.id.toString() === userId.toString());
+    if (user) {
+      currentUser.balance = user.balance || 0;
+    } else {
+      currentUser.balance = 0;
+    }
+  } else {
+    currentUser.balance = 0;
+  }
+  updateBalanceDisplay();
+}
+async function saveUserBalance() {
+  const idx = users.findIndex(u => u.id.toString() === userId.toString());
+  if (idx >= 0) {
+    users[idx].balance = currentUser.balance;
+  } else {
+    users.push({ id: userId, balance: currentUser.balance });
+  }
+  await updateUsersOnGitHub();
+}
+async function updateUsersOnGitHub() {
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
+  const getRes = await fetch(url, {
+    headers: {
+      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (!getRes.ok) { alert('Ошибка получения файла'); return; }
+  const sha = (await getRes.json()).sha;
+  const contentBase64 = btoa(JSON.stringify(users, null, 2));
+  const payload = {
+    message: 'Обновление баланса',
+    content: contentBase64,
+    sha: sha
+  };
+  await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify(payload)
+  });
 }
 
-const rollBtn = document.getElementById('rollBtn');
-const betInput = document.getElementById('betAmount');
-const resultDiv = document.getElementById('result');
-const numberBetInput = document.getElementById('numberBet');
+// Инициализация
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  userId = params.get('id') || 'test';
+  await loadUserBalance();
+})();
 
-let currentBet = 0;
-let betNumber = 0; // число, на которое ставка сделана
+function updateBalanceDisplay() {
+  document.getElementById('balanceDisplay').textContent = 'Баланс: ' + currentUser.balance + ' ₽';
+}
 
-// Обработка ставки на сумму
-document.getElementById('placeBetBtn').onclick = () => {
+// Обработка кнопок
+document.getElementById('start-game-btn').onclick = () => {
   const bet = parseFloat(betInput.value);
+  const guessNumber = parseInt(numberInput.value);
   if (isNaN(bet) || bet <= 0) {
-    alert('Введите корректную сумму ставки');
+    alert('Введите корректную ставку');
     return;
   }
-  if (bet > userBalance) {
-    alert('Недостаточно средств');
+  if (isNaN(guessNumber) || guessNumber < 1 || guessNumber > 12) {
+    alert('Введите число от 1 до 12');
     return;
   }
-  currentBet = bet;
-  alert(`Сделана ставка ${bet}₽ на сумму`);
+  if (currentUser.balance < bet) {
+    alert('Баланс недостаточен!');
+    return;
+  }
+  startGame(bet, guessNumber);
 };
 
-// Обработка ставки на число
-document.getElementById('placeNumberBetBtn').onclick = () => {
-  const num = parseInt(numberBetInput.value);
-  if (isNaN(num) || num < 1 || num > 6) {
-    alert('Введите число от 1 до 6');
-    return;
-  }
-  betNumber = num;
-  alert(`Сделана ставка ${currentBet}₽ на число ${betNumber}`);
-};
+async function startGame(bet, guessNumber) {
+  if (gameInProgress) return;
+  gameInProgress = true;
+  document.getElementById('result').textContent = '';
 
-// Основная логика броска
-rollBtn.onclick = () => {
-  if (currentBet <= 0) {
-    alert('Сначала сделайте ставку');
-    return;
-  }
-  // Воспроизведение звука
+  // бросок кубиков
+  const sum = Math.ceil(Math.random() * 6) + Math.ceil(Math.random() * 6);
+
+  // Анимация кубиков с звуком
+  throwCubes();
+
+  setTimeout(async () => {
+    // показываем результат
+    setFacePoints('cube1', 'front', Math.ceil(Math.random() * 6));
+    setFacePoints('cube2', 'front', Math.ceil(Math.random() * 6));
+    document.getElementById('result').textContent = 'Общая сумма: ' + sum;
+
+    if (sum === guessNumber) {
+      currentUser.balance += bet * 3;
+      document.getElementById('result').textContent += ' — Вы выиграли!';
+    } else {
+      currentUser.balance -= bet;
+      if (currentUser.balance < 0) currentUser.balance = 0;
+      document.getElementById('result').textContent += ' — Не угадали!';
+    }
+    updateBalanceDisplay();
+    await saveUserBalance();
+    gameInProgress = false;
+  }, 1500);
+}
+
+// Анимация кубиков с звуком
+function throwCubes() {
   const sound = document.getElementById('diceSound');
   if (sound) {
     sound.currentTime = 0;
-    sound.play().catch(e => { console.error(e); });
+    sound.play().catch(e => {});
   }
-  // Бросаем кубики
-  const cube1 = document.querySelector('#cube1');
-  const cube2 = document.querySelector('#cube2');
-
-  const sidesPoints = {
-    1: [[0,0]],
-    2: [[-0.6,0.6], [0.6,-0.6]],
-    3: [[-0.6,0.6], [0,0], [0.6,-0.6]],
-    4: [[-0.6,0.6], [-0.6,-0.6], [0.6,0.6], [0.6,-0.6]],
-    5: [[-0.6,0.6], [-0.6,-0.6], [0,0], [0.6,0.6], [0.6,-0.6]],
-    6: [[-0.6,0.6], [-0.6,0], [-0.6,-0.6], [0.6,0.6], [0.6,0], [0.6,-0.6]],
-  };
-
-  function setFace(cubeId, number) {
-    const face = document.querySelector(`#${cubeId} .front`);
-    face.innerHTML = '';
-    if (number === 0) return;
-    const points = sidesPoints[number];
-    const dotSize = 8;
-    const offset = 30;
-    points.forEach(coord => {
-      const dot = document.createElement('div');
-      dot.style.width = `${dotSize}px`;
-      dot.style.height = `${dotSize}px`;
-      dot.style.backgroundColor = 'black';
-      dot.style.borderRadius = '50%';
-      dot.style.position = 'absolute';
-      dot.style.left = `calc(50% + ${coord[0] * offset}px - ${dotSize/2}px)`;
-      dot.style.top = `calc(50% + ${coord[1] * offset}px - ${dotSize/2}px)`;
-      face.appendChild(dot);
-    });
-  }
-
-  // Анимация кубиков
   [cube1, cube2].forEach(cube => {
     cube.style.transition = 'none';
     cube.classList.remove('fly-rotate');
-    setFace(cube.id, 0);
+    setFacePoints(cube.id, 'front', 0);
+    cube.style.backgroundColor = '#fff';
   });
-  [cube1, cube2].forEach(cube => {
-    setTimeout(() => {
-      cube.classList.add('fly-rotate');
-    }, 50);
-  });
-  // После анимации выбрать числа
   setTimeout(() => {
-    const num1 = Math.ceil(Math.random() * 6);
-    const num2 = Math.ceil(Math.random() * 6);
-    const sum = num1 + num2;
+    [cube1, cube2].forEach(cube => {
+      cube.classList.add('fly-rotate');
+    });
+  }, 50);
+}
 
-    setFace('cube1', num1);
-    setFace('cube2', num2);
-    document.getElementById('result').textContent = 'Общая сумма: ' + sum;
+function setFacePoints(cubeId, faceClass, number) {
+  const face = document.querySelector(`#${cubeId} .${faceClass}`);
+  face.innerHTML = '';
+  if (number === 0) return;
+  const points = sidesPoints[number];
+  const dotSize = 8;
+  const offset = 30;
+  points.forEach(coord => {
+    const dot = document.createElement('div');
+    dot.style.width = `${dotSize}px`;
+    dot.style.height = `${dotSize}px`;
+    dot.style.backgroundColor = 'black';
+    dot.style.borderRadius = '50%';
+    dot.style.position = 'absolute';
+    dot.style.left = `calc(50% + ${coord[0] * offset}px - ${dotSize/2}px)`;
+    dot.style.top = `calc(50% + ${coord[1] * offset}px - ${dotSize/2}px)`;
+    face.appendChild(dot);
+  });
+}
 
-    // Проверка выигрыша
-    let won = false;
-    if (betNumber !== 0 && betNumber === num1 && betNumber === num2) {
-      // ставка на число и оба кубика совпали
-      won = true;
-      userBalance += currentBet * 2; // например, удваиваем ставку
-    } else if (betNumber !== 0 && (num1 === betNumber || num2 === betNumber)) {
-      // хотя бы один кубик совпал
-      won = true;
-      userBalance += currentBet; // вернуть ставку
-    } else if (sum === 7) {
-      // или по сумме
-      won = true;
-      userBalance += currentBet * 1.5; // пример
-    } else {
-      // проигрыш
-      userBalance -= currentBet;
-    }
-    // Обновляем баланс
-    document.getElementById('userBalance').textContent = userBalance;
-
-    // Обновляем в JSON - для примера показываю лог
-    fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(users => {
-        const idx = users.findIndex(u => u.id.toString() === userId);
-        if (idx !== -1) {
-          users[idx].balance = userBalance;
-          console.log('Обновленные данные:', users);
-          // Тут нужно отправлять обновленные данные на сервер
-        }
-      });
-  }, 600);
-};
+// Изначально кубики показывают пусто
+setTimeout(() => {
+  setFacePoints('cube1', 'front', 0);
+  setFacePoints('cube2', 'front', 0);
+  document.getElementById('result').textContent = 'Общая сумма: 0';
+}, 100);
 </script>
 </body>
 </html>
