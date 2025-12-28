@@ -202,7 +202,7 @@
 <button id="playAgainBtn">Играть снова</button>
 
 <script>
-const GITHUB_TOKEN = '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'; // вставьте свой токен
+const GITHUB_TOKEN = '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'; // вставьте свой токен
 const GITHUB_REPO = 'SaweNap/dfjghdfifgJSON';
 const FILE_PATH = 'users.json';
 
@@ -246,6 +246,31 @@ async function saveUserBalance() {
     users.push({ id: userId, balance: currentUser.balance });
   }
   await updateUsersOnGitHub();
+}
+async function updateUsersOnGitHub() {
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
+  const getRes = await fetch(url, {
+    headers: {
+      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (!getRes.ok) { alert('Ошибка получения файла'); return; }
+  const sha = (await getRes.json()).sha;
+  const contentBase64 = btoa(JSON.stringify(users, null, 2));
+  const payload = {
+    message: 'Обновление баланса',
+    content: contentBase64,
+    sha: sha
+  };
+  await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify(payload)
+  });
 }
 
 // Инициализация
