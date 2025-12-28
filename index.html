@@ -329,7 +329,7 @@ function showOverlayMessage(text) {
 
 // Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
-  if (gameInProgress) return; // чтобы не запускать одновременно
+  if (gameInProgress) return; // блокируем, если игра идет
   const bet = parseFloat(betInput.value);
   const guessNumber = parseInt(numberInput.value);
   if (isNaN(bet) || bet <= 0) {
@@ -348,7 +348,7 @@ document.getElementById('start-game-btn').onclick = () => {
 };
 
 async function startGame(bet, guessNumber) {
-  gameInProgress = true; // блокируем повторный запуск
+  gameInProgress = true; // блокируем повтор запуска
   document.getElementById('result').textContent = '';
 
   const sum = Math.ceil(Math.random() * 6) + Math.ceil(Math.random() * 6);
@@ -373,6 +373,7 @@ async function startGame(bet, guessNumber) {
 
     // показываем кнопку для новой игры
     showPlayAgainButton();
+
   }, 1500);
 }
 
@@ -383,8 +384,9 @@ function showPlayAgainButton() {
 document.getElementById('playAgainBtn').onclick = () => {
   document.getElementById('result').textContent = 'Общая сумма: 0';
   document.getElementById('playAgainBtn').style.display = 'none';
-  gameInProgress = false; // разблокируем новую игру
-  // можно оставить кубики в исходном состоянии или сбросить
+  // сбрасываем флаг, чтобы можно было начать игру заново
+  gameInProgress = false;
+  // сброс кубиков
   setTimeout(() => {
     setFacePoints('cube1', 'front', 0);
     setFacePoints('cube2', 'front', 0);
