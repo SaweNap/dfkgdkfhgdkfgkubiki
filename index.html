@@ -119,8 +119,16 @@
     margin-top: 10px;
   }
   #start-game-btn {
-    display: block;
-    margin: 10px auto;
+    /* убрана margin для корректной работы */
+    padding: 12px 25px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #6a11cb, #2575fc);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
   }
   /* Стиль для кнопки "Играть снова" */
   #playAgainBtn {
@@ -146,7 +154,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
 
-  /* Новое: стиль поверхностного сообщения */
+  /* Новый стиль для поверхностного сообщения */
   #overlayMessage {
     position: fixed;
     top: 0;
