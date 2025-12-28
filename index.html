@@ -122,6 +122,29 @@
     display: block;
     margin: 10px auto;
   }
+  /* Стиль для кнопки "Играть снова" */
+  #playAgainBtn {
+    display: none;
+    margin: 20px auto;
+    padding: 12px 25px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #6a11cb, #2575fc);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  #playAgainBtn:hover {
+    background: linear-gradient(45deg, #2575fc, #6a11cb);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  #playAgainBtn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
 </style>
 </head>
 <body>
@@ -163,6 +186,8 @@
   </div>
 </div>
 <div class="result" id="result">Общая сумма: 0</div>
+<!-- Кнопка "Играть снова" -->
+<button id="playAgainBtn">Играть снова</button>
 
 <script>
 const GITHUB_TOKEN = 'тут ваш токен'; // вставьте свой токен
@@ -178,6 +203,7 @@ const cube1 = document.querySelector('#cube1');
 const cube2 = document.querySelector('#cube2');
 const resultEl = document.getElementById('result');
 const startGameBtn = document.getElementById('start-game-btn');
+const playAgainBtn = document.getElementById('playAgainBtn');
 
 const sidesPoints = {
   1: [[0,0]],
@@ -303,8 +329,22 @@ async function startGame(bet, guessNumber) {
     updateBalanceDisplay();
     await saveUserBalance();
     gameInProgress = false;
+    // показываем кнопку "Играть снова"
+    showPlayAgainButton();
   }, 1500);
 }
+
+// Функция для отображения кнопки "Играть снова"
+function showPlayAgainButton() {
+  const btn = document.getElementById('playAgainBtn');
+  btn.style.display = 'block';
+}
+
+// Обработка кнопки "Играть снова"
+document.getElementById('playAgainBtn').onclick = () => {
+  document.getElementById('result').textContent = 'Общая сумма: 0';
+  document.getElementById('playAgainBtn').style.display = 'none';
+};
 
 // Анимация кубиков
 function throwCubes() {
