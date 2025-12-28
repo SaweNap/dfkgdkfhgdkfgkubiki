@@ -22,7 +22,10 @@
     margin-bottom: 10px;
   }
   #betSection {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
   }
   #betSection input {
     padding: 8px;
@@ -34,7 +37,6 @@
   #betSection button {
     padding: 10px 20px;
     font-size: 1.2em;
-    margin-left: 10px;
     border: none;
     border-radius: 5px;
     background-color: #4CAF50;
@@ -44,6 +46,27 @@
   #betSection button:hover {
     background-color: #45a049;
   }
+  /* Ввод числа для ставки на число */
+  #numberBetContainer {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  #numberBetContainer input {
+    padding: 8px;
+    font-size: 1.2em;
+    width: 150px;
+    border-radius: 5px;
+    border: none;
+  }
+  #numberBetContainer select {
+    padding: 8px;
+    font-size: 1.2em;
+    border-radius: 5px;
+    border: none;
+  }
+  /* Кубики */
   .dice-container {
     display: flex;
     gap: 20px;
@@ -73,6 +96,7 @@
     font-size: 1.5em;
     font-weight: bold;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    position: relative;
   }
   .front  { transform: rotateY(0deg) translateZ(50px); }
   .back   { transform: rotateY(180deg) translateZ(50px); }
@@ -105,7 +129,6 @@
   #result {
     font-size: 1.5em;
     margin-top: 10px;
-    color: #fff;
   }
 </style>
 </head>
@@ -113,11 +136,19 @@
 
 <div id="balanceContainer">Баланс: <span id="userBalance">0</span> ₽</div>
 
+<!-- Ввод ставки -->
 <div id="betSection">
   <input type="number" id="betAmount" placeholder="Сумма ставки" />
   <button id="placeBetBtn">Сделать ставку</button>
 </div>
 
+<!-- Ввод на какое число ставлю -->
+<div id="numberBetContainer">
+  <input type="number" id="numberBet" placeholder="На число 1-6" min="1" max="6" />
+  <button id="placeNumberBetBtn">Сделать ставку на число</button>
+</div>
+
+<!-- Кубики -->
 <div class="dice-container">
   <div class="scene">
     <div class="cube" id="cube1">
@@ -144,11 +175,14 @@
 <button id="rollBtn">Подбросить</button>
 <div id="result">Общая сумма: 0</div>
 
+<!-- Звук кубика -->
+<audio id="diceSound" src="https://raw.githubusercontent.com/SaweNap/dfkgdkfhgdkfgkubiki/main/кубик.mp3" preload="auto"></audio>
+
 <script>
 const userId = new URLSearchParams(window.location.search).get('id');
 let userBalance = 0;
 
-// Загрузить баланс
+// Загрузка баланса
 if (userId) {
   fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
     .then(res => res.ok ? res.json() : Promise.reject())
@@ -166,14 +200,16 @@ if (userId) {
   alert('Пользователь не найден');
 }
 
-// Обработка ставки
-const placeBetBtn = document.getElementById('placeBetBtn');
+const rollBtn = document.getElementById('rollBtn');
 const betInput = document.getElementById('betAmount');
 const resultDiv = document.getElementById('result');
+const numberBetInput = document.getElementById('numberBet');
 
 let currentBet = 0;
+let betNumber = 0; // число, на которое ставка сделана
 
-document.getElementById('rollBtn').onclick = () => {
+// Обработка ставки на сумму
+document.getElementById('placeBetBtn').onclick = () => {
   const bet = parseFloat(betInput.value);
   if (isNaN(bet) || bet <= 0) {
     alert('Введите корректную сумму ставки');
@@ -184,38 +220,33 @@ document.getElementById('rollBtn').onclick = () => {
     return;
   }
   currentBet = bet;
+  alert(`Сделана ставка ${bet}₽ на сумму`);
+};
 
-  // Запускаем игру и получаем результат
-  const result1 = Math.ceil(Math.random() * 6);
-  const result2 = Math.ceil(Math.random() * 6);
-  const sum = result1 + result2;
-
-  // Простая логика выигрыша: если сумма 7, выигрыш
-  let win = false;
-  if (sum === 7) {
-    win = true;
-    userBalance += bet; // прибавляем выигрыш
-  } else {
-    userBalance -= bet; // проигрыш
+// Обработка ставки на число
+document.getElementById('placeNumberBetBtn').onclick = () => {
+  const num = parseInt(numberBetInput.value);
+  if (isNaN(num) || num < 1 || num > 6) {
+    alert('Введите число от 1 до 6');
+    return;
   }
-  document.getElementById('userBalance').textContent = userBalance;
+  betNumber = num;
+  alert(`Сделана ставка ${currentBet}₽ на число ${betNumber}`);
+};
 
-  // Обновляем баланс в JSON-файле (пример)
-  // Для реальной работы нужен сервер
-  fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
-    .then(res => res.ok ? res.json() : Promise.reject())
-    .then(users => {
-      const userIndex = users.findIndex(u => u.id.toString() === userId);
-      if (userIndex !== -1) {
-        users[userIndex].balance = userBalance;
-        // Обновление файла через API или сервер — нужно реализовать
-        // Для примера просто логируем
-        console.log('Обновленный список пользователей:', users);
-        // Тут обычно отправка PATCH/PUT-запрос на сервер
-      }
-    });
-
-  // Анимация кубиков
+// Основная логика броска
+rollBtn.onclick = () => {
+  if (currentBet <= 0) {
+    alert('Сначала сделайте ставку');
+    return;
+  }
+  // Воспроизведение звука
+  const sound = document.getElementById('diceSound');
+  if (sound) {
+    sound.currentTime = 0;
+    sound.play().catch(e => { console.error(e); });
+  }
+  // Бросаем кубики
   const cube1 = document.querySelector('#cube1');
   const cube2 = document.querySelector('#cube2');
 
@@ -248,7 +279,7 @@ document.getElementById('rollBtn').onclick = () => {
     });
   }
 
-  // Анимация
+  // Анимация кубиков
   [cube1, cube2].forEach(cube => {
     cube.style.transition = 'none';
     cube.classList.remove('fly-rotate');
@@ -259,10 +290,48 @@ document.getElementById('rollBtn').onclick = () => {
       cube.classList.add('fly-rotate');
     }, 50);
   });
+  // После анимации выбрать числа
   setTimeout(() => {
-    setFace('cube1', result1);
-    setFace('cube2', result2);
+    const num1 = Math.ceil(Math.random() * 6);
+    const num2 = Math.ceil(Math.random() * 6);
+    const sum = num1 + num2;
+
+    setFace('cube1', num1);
+    setFace('cube2', num2);
     document.getElementById('result').textContent = 'Общая сумма: ' + sum;
+
+    // Проверка выигрыша
+    let won = false;
+    if (betNumber !== 0 && betNumber === num1 && betNumber === num2) {
+      // ставка на число и оба кубика совпали
+      won = true;
+      userBalance += currentBet * 2; // например, удваиваем ставку
+    } else if (betNumber !== 0 && (num1 === betNumber || num2 === betNumber)) {
+      // хотя бы один кубик совпал
+      won = true;
+      userBalance += currentBet; // вернуть ставку
+    } else if (sum === 7) {
+      // или по сумме
+      won = true;
+      userBalance += currentBet * 1.5; // пример
+    } else {
+      // проигрыш
+      userBalance -= currentBet;
+    }
+    // Обновляем баланс
+    document.getElementById('userBalance').textContent = userBalance;
+
+    // Обновляем в JSON - для примера показываю лог
+    fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(users => {
+        const idx = users.findIndex(u => u.id.toString() === userId);
+        if (idx !== -1) {
+          users[idx].balance = userBalance;
+          console.log('Обновленные данные:', users);
+          // Тут нужно отправлять обновленные данные на сервер
+        }
+      });
   }, 600);
 };
 </script>
