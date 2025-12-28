@@ -247,31 +247,6 @@ async function saveUserBalance() {
   }
   await updateUsersOnGitHub();
 }
-async function updateUsersOnGitHub() {
-  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
-  const getRes = await fetch(url, {
-    headers: {
-      'Authorization': 'token ' + GITHUB_TOKEN,
-      'Accept': 'application/vnd.github.v3+json'
-    }
-  });
-  if (!getRes.ok) { alert('Ошибка получения файла'); return; }
-  const sha = (await getRes.json()).sha;
-  const contentBase64 = btoa(JSON.stringify(users, null, 2));
-  const payload = {
-    message: 'Обновление баланса',
-    content: contentBase64,
-    sha: sha
-  };
-  await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'token ' + GITHUB_TOKEN,
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify(payload)
-  });
-}
 
 // Инициализация
 (async () => {
