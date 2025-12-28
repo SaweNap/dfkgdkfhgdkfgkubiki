@@ -284,11 +284,11 @@ function updateBalanceDisplay() {
 
 // Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
-  // активируем поля для ввода
+  // Активируем поля для ввода
   betInput.disabled = false;
   numberInput.disabled = false;
 
-  // Перед запуском сбрасываем флаг, чтобы можно было играть повторно
+  // Перед запуском сбрасываем флаг
   gameInProgress = false;
 
   const bet = parseFloat(betInput.value);
@@ -311,16 +311,18 @@ document.getElementById('start-game-btn').onclick = () => {
 async function startGame(bet, guessNumber) {
   if (gameInProgress) return;
   gameInProgress = true;
+
+  // Блокируем поля, чтобы не менять во время игры
+  betInput.disabled = true;
+  numberInput.disabled = true;
+
   document.getElementById('result').textContent = '';
 
-  // бросок кубиков
   const sum = Math.ceil(Math.random() * 6) + Math.ceil(Math.random() * 6);
 
-  // Анимация кубиков с звуком
   throwCubes();
 
   setTimeout(async () => {
-    // показываем результат
     setFacePoints('cube1', 'front', Math.ceil(Math.random() * 6));
     setFacePoints('cube2', 'front', Math.ceil(Math.random() * 6));
     document.getElementById('result').textContent = 'Общая сумма: ' + sum;
@@ -336,41 +338,38 @@ async function startGame(bet, guessNumber) {
     updateBalanceDisplay();
     await saveUserBalance();
 
-    // разрешаем ввод снова
+    // Разблокируем поля для новых вводов
     betInput.disabled = false;
     numberInput.disabled = false;
 
     gameInProgress = false;
-    // показываем кнопку "Играть снова"
     showPlayAgainButton();
   }, 1500);
 }
 
-// Функция для отображения кнопки "Играть снова"
-function showPlayAgainButton() {
-  const btn = document.getElementById('playAgainBtn');
-  btn.style.display = 'block';
-}
-
-// Обработка кнопки "Играть снова"
+// Обработка "Играть снова"
 document.getElementById('playAgainBtn').onclick = () => {
   document.getElementById('result').textContent = 'Общая сумма: 0';
   document.getElementById('playAgainBtn').style.display = 'none';
 
-  // разблокируем поля для ввода
+  // Разблокируем поля для ввода
   betInput.disabled = false;
   numberInput.disabled = false;
 
-  // сбрасываем флаг, чтобы можно было играть
+  // Очистка значений (при желании)
+  // betInput.value = '';
+  // numberInput.value = '';
+
+  // сбрасываем флаг
   gameInProgress = false;
 };
-  
+
 // Анимация кубиков
 function throwCubes() {
   const sound = document.getElementById('diceSound');
   if (sound) {
     sound.currentTime = 0;
-    sound.play(); // Воспроизведение звука при старте анимации
+    sound.play();
   }
   [cube1, cube2].forEach(cube => {
     cube.style.transition = 'none';
@@ -405,7 +404,6 @@ function setFacePoints(cubeId, faceClass, number) {
   });
 }
 
-// Изначально кубики показывают пусто
 setTimeout(() => {
   setFacePoints('cube1', 'front', 0);
   setFacePoints('cube2', 'front', 0);
