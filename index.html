@@ -293,10 +293,16 @@ placeBetBtn.onclick = async () => {
   }
   // списываем ставку
   userBalance -= betSum;
+  // запускаем анимацию кубиков
+  await startDiceAnimation();
 
-  // бросаем кубики
+  // после анимации показываем результат
+  // здесь заменяем на ваш код, который показывает выпавшие числа и результат
+  // например, используем переменные roll1 и roll2, которые получены из анимации
+  // для примера сделаю рандомные числа
   const roll1 = getRandomNumber();
   const roll2 = getRandomNumber();
+
   document.getElementById('result').innerText = 'Общая сумма: ' + (roll1 + roll2);
   alert('Выпало: ' + roll1 + ' и ' + roll2);
 
@@ -322,15 +328,39 @@ cancelBetBtn.onclick = () => {
   document.getElementById('betSection').style.display = 'none';
 };
 
-function getRandomNumber() {
-  return Math.ceil(Math.random() * 6);
+// функция запуска анимации кубиков
+async function startDiceAnimation() {
+  // добавьте сюда код, который запускает анимацию кубиков
+  // например, добавление класса с анимацией и ожидание ее завершения
+  // для простоты оставлю как есть
+  return new Promise(resolve => {
+    // запуск анимации
+    // например, добавляем класс
+    document.querySelectorAll('.cube').forEach(cube => cube.classList.add('fly-rotate'));
+    // через 1.2 сек (длительность анимации) вызываем resolve
+    setTimeout(() => {
+      document.querySelectorAll('.cube').forEach(cube => cube.classList.remove('fly-rotate'));
+      resolve();
+    }, 1200);
+  });
 }
 
+// Изначально установка лиц кубиков
 setTimeout(() => {
   setFacePoints('cube1', 'front', 0);
   setFacePoints('cube2', 'front', 0);
   document.getElementById('result').innerText = 'Общая сумма: 0';
 }, 100);
+
+function setFacePoints(cubeId, faceClass, number) {
+  const face = document.querySelector(`#${cubeId} .${faceClass}`);
+  face.innerHTML = '';
+  // добавьте сюда код для отображения чисел на лицах кубика
+}
+
+function getRandomNumber() {
+  return Math.ceil(Math.random() * 6);
+}
 </script>
 </body>
 </html>
