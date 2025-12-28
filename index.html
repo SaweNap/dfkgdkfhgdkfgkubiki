@@ -190,7 +190,7 @@
 <button id="playAgainBtn">Играть снова</button>
 
 <script>
-const GITHUB_TOKEN = 'тут ваш токен'; // вставьте свой токен
+const GITHUB_TOKEN = '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'; // вставьте сюда ваш токен
 const GITHUB_REPO = 'SaweNap/dfjghdfifgJSON';
 const FILE_PATH = 'users.json';
 
@@ -356,7 +356,7 @@ function throwCubes() {
   const sound = document.getElementById('diceSound');
   if (sound) {
     sound.currentTime = 0;
-    sound.play().catch(e => {});
+    sound.play(); // Воспроизведение звука при старте анимации
   }
   [cube1, cube2].forEach(cube => {
     cube.style.transition = 'none';
