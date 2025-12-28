@@ -84,6 +84,8 @@
     color: #fff;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 999;
   }
   button:hover {
     background: linear-gradient(45deg, #2575fc, #6a11cb);
@@ -117,9 +119,10 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 10px;
+    position: relative;
+    z-index: 999; /* чтобы точно было сверху */
   }
   #start-game-btn {
-    /* убрана margin для корректной работы */
     padding: 12px 25px;
     font-size: 1.2em;
     cursor: pointer;
@@ -129,6 +132,8 @@
     color: #fff;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 999;
   }
   /* Стиль для кнопки "Играть снова" */
   #playAgainBtn {
@@ -154,7 +159,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
 
-  /* Новый стиль для поверхностного сообщения */
+  /* Поверхностное сообщение */
   #overlayMessage {
     position: fixed;
     top: 0;
