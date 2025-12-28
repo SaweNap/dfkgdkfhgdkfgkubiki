@@ -284,6 +284,9 @@ function updateBalanceDisplay() {
 
 // Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
+  // Перед запуском сбрасываем флаг, чтобы можно было играть повторно
+  gameInProgress = false;
+
   const bet = parseFloat(betInput.value);
   const guessNumber = parseInt(numberInput.value);
   if (isNaN(bet) || bet <= 0) {
@@ -344,6 +347,8 @@ function showPlayAgainButton() {
 document.getElementById('playAgainBtn').onclick = () => {
   document.getElementById('result').textContent = 'Общая сумма: 0';
   document.getElementById('playAgainBtn').style.display = 'none';
+  // сбрасываем флаг, чтобы можно было играть
+  gameInProgress = false;
 };
 
 // Анимация кубиков
