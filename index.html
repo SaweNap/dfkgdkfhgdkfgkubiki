@@ -284,6 +284,10 @@ function updateBalanceDisplay() {
 
 // Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
+  // активируем поля для ввода
+  betInput.disabled = false;
+  numberInput.disabled = false;
+
   // Перед запуском сбрасываем флаг, чтобы можно было играть повторно
   gameInProgress = false;
 
@@ -331,6 +335,11 @@ async function startGame(bet, guessNumber) {
     }
     updateBalanceDisplay();
     await saveUserBalance();
+
+    // разрешаем ввод снова
+    betInput.disabled = false;
+    numberInput.disabled = false;
+
     gameInProgress = false;
     // показываем кнопку "Играть снова"
     showPlayAgainButton();
@@ -347,10 +356,15 @@ function showPlayAgainButton() {
 document.getElementById('playAgainBtn').onclick = () => {
   document.getElementById('result').textContent = 'Общая сумма: 0';
   document.getElementById('playAgainBtn').style.display = 'none';
+
+  // разблокируем поля для ввода
+  betInput.disabled = false;
+  numberInput.disabled = false;
+
   // сбрасываем флаг, чтобы можно было играть
   gameInProgress = false;
 };
-
+  
 // Анимация кубиков
 function throwCubes() {
   const sound = document.getElementById('diceSound');
