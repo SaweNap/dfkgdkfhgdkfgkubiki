@@ -54,9 +54,9 @@
   .front  { transform: rotateY(0deg) translateZ(50px); }
   .back   { transform: rotateY(180deg) translateZ(50px); }
   .right  { transform: rotateY(90deg) translateZ(50px); }
-  .left   { transform: rotateY(-90deg) translateZ(50px); }
+  .left   { transform: rotateY(-90deg); }
   .top    { transform: rotateX(90deg) translateZ(50px); }
-  .bottom { transform: rotateX(-90deg) translateZ(50px); }
+  .bottom { transform: rotateX(-90deg); }
 
   @keyframes flyAndRotate {
     0% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
@@ -293,13 +293,13 @@ placeBetBtn.onclick = async () => {
   }
   // списываем ставку
   userBalance -= betSum;
+  // закрываем меню
+  document.getElementById('betSection').style.display = 'none';
+
   // запускаем анимацию кубиков
   await startDiceAnimation();
 
   // после анимации показываем результат
-  // здесь заменяем на ваш код, который показывает выпавшие числа и результат
-  // например, используем переменные roll1 и roll2, которые получены из анимации
-  // для примера сделаю рандомные числа
   const roll1 = getRandomNumber();
   const roll2 = getRandomNumber();
 
@@ -321,7 +321,6 @@ placeBetBtn.onclick = async () => {
   }
   updateBalance();
   checkBalance();
-  document.getElementById('betSection').style.display = 'none';
 };
 
 cancelBetBtn.onclick = () => {
@@ -332,12 +331,8 @@ cancelBetBtn.onclick = () => {
 async function startDiceAnimation() {
   // добавьте сюда код, который запускает анимацию кубиков
   // например, добавление класса с анимацией и ожидание ее завершения
-  // для простоты оставлю как есть
   return new Promise(resolve => {
-    // запуск анимации
-    // например, добавляем класс
     document.querySelectorAll('.cube').forEach(cube => cube.classList.add('fly-rotate'));
-    // через 1.2 сек (длительность анимации) вызываем resolve
     setTimeout(() => {
       document.querySelectorAll('.cube').forEach(cube => cube.classList.remove('fly-rotate'));
       resolve();
@@ -355,7 +350,7 @@ setTimeout(() => {
 function setFacePoints(cubeId, faceClass, number) {
   const face = document.querySelector(`#${cubeId} .${faceClass}`);
   face.innerHTML = '';
-  // добавьте сюда код для отображения чисел на лицах кубика
+  // Тут добавьте код для отображения чисел на лицах кубика
 }
 
 function getRandomNumber() {
