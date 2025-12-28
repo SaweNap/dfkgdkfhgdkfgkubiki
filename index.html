@@ -112,11 +112,13 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     width: 200px;
   }
-  #start-game-btn {
-    display: block;
-    margin: 10px auto;
+  /* Контейнер для кнопки "Начать игру" справа */
+  #startBtnContainer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
   }
-  #rollBtn {
+  #start-game-btn {
     display: block;
     margin: 10px auto;
   }
@@ -124,13 +126,18 @@
 </head>
 <body>
 
-<!-- Добавляем аудио для звука кубика -->
+<!-- Аудио для кубика -->
 <audio id="diceSound" src="https://github.com/SaweNap/dfkgdkfhgdkfgkubiki/blob/main/кубик.mp3" preload="auto"></audio>
 
 <div class="balance" id="balanceDisplay">Баланс: 0 ₽</div>
 <input type="number" id="bet-input" placeholder="Введите ставку" min="1" />
 <input type="number" id="number-input" placeholder="От 1 до 12" min="1" max="12" />
-<button id="start-game-btn">Начать игру</button>
+
+<!-- Контейнер для кнопки "Начать игру" справа -->
+<div id="startBtnContainer">
+  <button id="start-game-btn">Начать игру</button>
+</div>
+
 <div id="message"></div>
 
 <div class="dice-container">
@@ -155,7 +162,6 @@
     </div>
   </div>
 </div>
-<button id="rollBtn">Подбросить</button>
 <div class="result" id="result">Общая сумма: 0</div>
 
 <script>
@@ -172,7 +178,6 @@ const cube1 = document.querySelector('#cube1');
 const cube2 = document.querySelector('#cube2');
 const resultEl = document.getElementById('result');
 const startGameBtn = document.getElementById('start-game-btn');
-const rollBtn = document.getElementById('rollBtn');
 
 const sidesPoints = {
   1: [[0,0]],
@@ -188,7 +193,7 @@ let userId = null;
 let users = [];
 let gameInProgress = false;
 
-// Загрузка баланса из users.json
+// Загрузка баланса
 async function loadUserBalance() {
   const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${FILE_PATH}`;
   const response = await fetch(url);
@@ -251,7 +256,7 @@ function updateBalanceDisplay() {
   document.getElementById('balanceDisplay').textContent = 'Баланс: ' + currentUser.balance + ' ₽';
 }
 
-// Обработка кнопок
+// Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
   const bet = parseFloat(betInput.value);
   const guessNumber = parseInt(numberInput.value);
@@ -301,7 +306,7 @@ async function startGame(bet, guessNumber) {
   }, 1500);
 }
 
-// Анимация кубиков с звуком
+// Анимация кубиков
 function throwCubes() {
   const sound = document.getElementById('diceSound');
   if (sound) {
