@@ -153,6 +153,7 @@
 <audio id="diceSound" src="https://github.com/SaweNap/dfkgdkfhgdkfgkubiki/blob/main/кубик.mp3" preload="auto"></audio>
 
 <div class="balance" id="balanceDisplay">Баланс: 0 ₽</div>
+<!-- Поля для ставки и числа -->
 <input type="number" id="bet-input" placeholder="Введите ставку" min="1" />
 <input type="number" id="number-input" placeholder="От 1 до 12" min="1" max="12" />
 
@@ -284,11 +285,10 @@ function updateBalanceDisplay() {
 
 // Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
-  // Перед запуском сбрасываем флаг, чтобы можно было играть повторно
-  gameInProgress = false;
-
+  // Перед запуском берем текущие значения
   const bet = parseFloat(betInput.value);
   const guessNumber = parseInt(numberInput.value);
+  
   if (isNaN(bet) || bet <= 0) {
     alert('Введите корректную ставку');
     return;
