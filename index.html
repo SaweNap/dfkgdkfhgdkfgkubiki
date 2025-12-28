@@ -369,22 +369,22 @@ async function startGame(bet, guessNumber) {
     }
     updateBalanceDisplay();
     await saveUserBalance();
-    gameInProgress = false;
+    gameInProgress = false; // Сброс флага, чтобы можно было играть заново
     showPlayAgainButton();
   }, 1500);
 }
 
 function showPlayAgainButton() {
-  const btn = document.getElementById('playAgainBtn');
-  btn.style.display = 'block';
+  document.getElementById('playAgainBtn').style.display = 'block';
 }
 
 document.getElementById('playAgainBtn').onclick = () => {
   document.getElementById('result').textContent = 'Общая сумма: 0';
   document.getElementById('playAgainBtn').style.display = 'none';
-  gameInProgress = false;
+  gameInProgress = false; // Разрешить запуск новой игры
 };
 
+// Функции для кубиков
 function throwCubes() {
   const sound = document.getElementById('diceSound');
   if (sound) {
