@@ -76,14 +76,26 @@
     color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    margin: 10px;
   }
-  button:hover {
-    background: #45a049;
+  button:disabled {
+    background: #888;
+    cursor: not-allowed;
   }
-  .result {
-    margin-top: 20px;
-    font-size: 1.5em;
-    color: #fff;
+  #betSection {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 9999;
+  }
+  #betSection input, #betSection select {
+    font-size: 1.2em;
+    margin: 5px 0;
   }
 </style>
 </head>
@@ -115,122 +127,210 @@
 </div>
 
 <button id="rollBtn">Подбросить</button>
-<div class="result" id="result">Общая сумма: 0</div>
+
+<div id="result">Общая сумма: 0</div>
+
+<!-- Меню для ставки -->
+<div id="betSection">
+  <div>Введите сумму ставки: <input type="number" id="betAmount" min="1" value="30"></div>
+  <div>Выберите число (1-12): 
+    <select id="betNumber"></select>
+  </div>
+  <button id="placeBetBtn">Поставить ставку</button>
+  <button id="cancelBetBtn">Отмена</button>
+</div>
 
 <script>
 // Блокировка Ctrl+колесика
 document.addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
 
-// Объявление переменных
+// Переменные
 const cube1 = document.querySelector('#cube1');
 const cube2 = document.querySelector('#cube2');
 const resultEl = document.getElementById('result');
-const btn = document.getElementById('rollBtn');
-const balanceDisplay = document.getElementById('balanceDisplay');
+const rollBtn = document.getElementById('rollBtn');
+const balanceEl = document.getElementById('balanceDisplay');
+const betSection = document.getElementById('betSection');
+const betAmountInput = document.getElementById('betAmount');
+const betNumberSelect = document.getElementById('betNumber');
+const placeBetBtn = document.getElementById('placeBetBtn');
+const cancelBetBtn = document.getElementById('cancelBetBtn');
 
-// Звук анимации кубика
-const diceSound = new Audio('https://github.com/SaweNap/dfkgdkfhgdkfgkubiki/raw/main/кубик.mp3');
+let userBalance = 0;
+let currentUser = null;
+let users = [];
+const userIdFromUrl = new URLSearchParams(window.location.search).get('id');
 
-// Массив точек для сторон кубика
-const sidesPoints = {
-  1: [[0,0]],
-  2: [[-0.6,0.6], [0.6,-0.6]],
-  3: [[-0.6,0.6], [0,0], [0.6,-0.6]],
-  4: [[-0.6,0.6], [-0.6,-0.6], [0.6,0.6], [0.6,-0.6]],
-  5: [[-0.6,0.6], [-0.6,-0.6], [0,0], [0.6,0.6], [0.6,-0.6]],
-  6: [[-0.6,0.6], [-0.6,0], [-0.6,-0.6], [0.6,0.6], [0.6,0], [0.6,-0.6]],
+for (let i=1; i<=12; i++) {
+  const option = document.createElement('option');
+  option.value = i;
+  option.innerText = i;
+  betNumberSelect.appendChild(option);
+}
+
+// Функции для работы с JSON на GitHub
+async function loadUsers() {
+  const url = 'https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json';
+  const res = await fetch(url);
+  if (res.ok) {
+    return await res.json();
+  } else {
+    return [];
+  }
+}
+
+async function saveUsers(usersData) {
+  const apiUrl = 'https://api.github.com/repos/SaweNap/dfjghdfifgJSON/contents/users.json';
+  const token = 'ghp_jf0qnvZWZ1hnSit6AG2DlS9Croa9781nNnGgIN';
+
+  const res = await fetch(apiUrl, {
+    headers: {
+      'Authorization': 'token ' + token,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (!res.ok) return false;
+  const data = await res.json();
+  const sha = data.sha;
+  const content = btoa(JSON.stringify(usersData));
+
+  const putRes = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + token,
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify({
+      message: 'Обновление users.json при /start',
+      content: content,
+      sha: sha
+    })
+  });
+  return putRes.ok;
+}
+
+(async () => {
+  users = await loadUsers();
+  if (userIdFromUrl) {
+    currentUser = users.find(u => u.id.toString() === userIdFromUrl);
+    if (currentUser) {
+      userBalance = currentUser.balance || 0;
+    } else {
+      currentUser = {
+        id: userIdFromUrl,
+        nickname: '', 
+        balance: 0
+      };
+      users.push(currentUser);
+      await saveUsers(users);
+    }
+    updateBalance();
+    checkBalance();
+  }
+})();
+
+function updateBalance() {
+  balanceEl.innerText = 'Баланс: ' + userBalance + ' ₽';
+}
+
+function checkBalance() {
+  if (userBalance <= 0) {
+    rollBtn.disabled = true;
+    showAddBalanceButton();
+  } else {
+    rollBtn.disabled = false;
+    hideAddBalanceButton();
+  }
+}
+
+let addBalanceBtn = null;
+function showAddBalanceButton() {
+  if (!addBalanceBtn) {
+    addBalanceBtn = document.createElement('button');
+    addBalanceBtn.innerText = 'Пополнить баланс';
+    addBalanceBtn.onclick = () => {
+      userBalance += 100; // пример пополнения
+      if (currentUser) {
+        currentUser.balance = userBalance;
+        saveUsers(users);
+      }
+      updateBalance();
+      checkBalance();
+    };
+    document.body.appendChild(addBalanceBtn);
+  }
+}
+function hideAddBalanceButton() {
+  if (addBalanceBtn) {
+    document.body.removeChild(addBalanceBtn);
+    addBalanceBtn = null;
+  }
+}
+
+// Обработка кнопки "Подбросить"
+document.getElementById('rollBtn').addEventListener('click', () => {
+  if (!currentUser) {
+    alert('Пользователь не найден. Пожалуйста, перезагрузите страницу или войдите снова.');
+    return;
+  }
+  if (userBalance <= 0) {
+    alert('Баланс равен 0. Пополните баланс для игры.');
+    return;
+  }
+  showBetMenu();
+});
+
+function showBetMenu() {
+  document.getElementById('betSection').style.display = 'block';
+}
+
+placeBetBtn.onclick = async () => {
+  const betSum = parseInt(betAmountInput.value);
+  const chosenNumber = parseInt(betNumberSelect.value);
+  if (isNaN(betSum) || betSum < 1 || betSum > userBalance) {
+    alert('Некорректная сумма ставки или недостаточно средств.');
+    return;
+  }
+  // списываем ставку
+  userBalance -= betSum;
+
+  // бросаем кубики
+  const roll1 = getRandomNumber();
+  const roll2 = getRandomNumber();
+  document.getElementById('result').innerText = 'Общая сумма: ' + (roll1 + roll2);
+  alert('Выпало: ' + roll1 + ' и ' + roll2);
+
+  if (roll1 === chosenNumber || roll2 === chosenNumber) {
+    const winnings = betSum * 3;
+    userBalance += winnings;
+    alert('Поздравляем! Вы выиграли ' + winnings + ' ₽');
+  } else {
+    alert('Пробуйте еще!');
+  }
+
+  // обновляем баланс
+  if (currentUser) {
+    currentUser.balance = userBalance;
+    await saveUsers(users);
+  }
+  updateBalance();
+  checkBalance();
+  document.getElementById('betSection').style.display = 'none';
 };
 
-// Функция для генерации случайного числа 1-6
+cancelBetBtn.onclick = () => {
+  document.getElementById('betSection').style.display = 'none';
+};
+
 function getRandomNumber() {
   return Math.ceil(Math.random() * 6);
 }
 
-// Функция для установки точек на лицах кубика
-function setFacePoints(cubeId, faceClass, number) {
-  const face = document.querySelector(`#${cubeId} .${faceClass}`);
-  face.innerHTML = '';
-  if (number === 0) return;
-  const points = sidesPoints[number];
-  const dotSize = 8;
-  const offset = 30;
-  points.forEach(coord => {
-    const dot = document.createElement('div');
-    dot.style.width = `${dotSize}px`;
-    dot.style.height = `${dotSize}px`;
-    dot.style.backgroundColor = 'black';
-    dot.style.borderRadius = '50%';
-    dot.style.position = 'absolute';
-    dot.style.left = `calc(50% + ${coord[0] * offset}px - ${dotSize/2}px)`;
-    dot.style.top = `calc(50% + ${coord[1] * offset}px - ${dotSize/2}px)`;
-    face.appendChild(dot);
-  });
-}
-
-// Функция для броска кубиков с анимацией и звуком
-function throwCubes() {
-  // Воспроизведение звука
-  diceSound.currentTime = 0;
-  diceSound.play().catch(e => { console.log('Ошибка воспроизведения звука', e); });
-  
-  // Очистка и подготовка кубиков
-  [cube1, cube2].forEach(cube => {
-    cube.style.transition = 'none';
-    cube.classList.remove('fly-rotate');
-    setFacePoints(cube.id, 'front', 0);
-    cube.style.backgroundColor = '#fff';
-  });
-  // Запуск анимации
-  [cube1, cube2].forEach(cube => {
-    setTimeout(() => {
-      cube.classList.add('fly-rotate');
-    }, 50);
-  });
-  // В середине анимации
-  setTimeout(() => {
-    const num1 = getRandomNumber();
-    const num2 = getRandomNumber();
-    setFacePoints('cube1', 'front', num1);
-    setFacePoints('cube2', 'front', num2);
-    document.getElementById('result').textContent = 'Общая сумма: ' + (num1 + num2);
-  }, 600);
-}
-
-// Изначально кубики и сумма
 setTimeout(() => {
   setFacePoints('cube1', 'front', 0);
   setFacePoints('cube2', 'front', 0);
-  document.getElementById('result').textContent = 'Общая сумма: 0';
+  document.getElementById('result').innerText = 'Общая сумма: 0';
 }, 100);
-
-// Обновление баланса
-function updateBalanceDisplay(balance) {
-  document.getElementById('balanceDisplay').innerText = 'Баланс: ' + balance + ' ₽';
-}
-
-// Получение и установка баланса из URL и JSON
-(function() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('id');
-  if (userId) {
-    fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(users => {
-        const user = users.find(u => u.id.toString()===userId.toString());
-        if (user) {
-          updateBalanceDisplay(user.balance || 0);
-        } else {
-          updateBalanceDisplay(0);
-        }
-      })
-      .catch(() => { updateBalanceDisplay(0); });
-  } else {
-    updateBalanceDisplay(0);
-  }
-})();
-
-// Обработчик кнопки
-document.getElementById('rollBtn').addEventListener('click', throwCubes);
 </script>
 </body>
 </html>
