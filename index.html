@@ -190,7 +190,7 @@
 <button id="playAgainBtn">Играть снова</button>
 
 <script>
-const GITHUB_TOKEN = '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'; // вставьте сюда ваш токен
+const GITHUB_TOKEN = 'тут ваш токен'; // вставьте свой токен
 const GITHUB_REPO = 'SaweNap/dfjghdfifgJSON';
 const FILE_PATH = 'users.json';
 
@@ -284,11 +284,7 @@ function updateBalanceDisplay() {
 
 // Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
-  // Активируем поля для ввода
-  betInput.disabled = false;
-  numberInput.disabled = false;
-
-  // Перед запуском сбрасываем флаг
+  // Перед запуском сбрасываем флаг, чтобы можно было играть повторно
   gameInProgress = false;
 
   const bet = parseFloat(betInput.value);
@@ -311,18 +307,16 @@ document.getElementById('start-game-btn').onclick = () => {
 async function startGame(bet, guessNumber) {
   if (gameInProgress) return;
   gameInProgress = true;
-
-  // Блокируем поля, чтобы не менять во время игры
-  betInput.disabled = true;
-  numberInput.disabled = true;
-
   document.getElementById('result').textContent = '';
 
+  // бросок кубиков
   const sum = Math.ceil(Math.random() * 6) + Math.ceil(Math.random() * 6);
 
+  // Анимация кубиков с звуком
   throwCubes();
 
   setTimeout(async () => {
+    // показываем результат
     setFacePoints('cube1', 'front', Math.ceil(Math.random() * 6));
     setFacePoints('cube2', 'front', Math.ceil(Math.random() * 6));
     document.getElementById('result').textContent = 'Общая сумма: ' + sum;
@@ -337,30 +331,23 @@ async function startGame(bet, guessNumber) {
     }
     updateBalanceDisplay();
     await saveUserBalance();
-
-    // Разблокируем поля для новых вводов
-    betInput.disabled = false;
-    numberInput.disabled = false;
-
     gameInProgress = false;
+    // показываем кнопку "Играть снова"
     showPlayAgainButton();
   }, 1500);
 }
 
-// Обработка "Играть снова"
+// Функция для отображения кнопки "Играть снова"
+function showPlayAgainButton() {
+  const btn = document.getElementById('playAgainBtn');
+  btn.style.display = 'block';
+}
+
+// Обработка кнопки "Играть снова"
 document.getElementById('playAgainBtn').onclick = () => {
   document.getElementById('result').textContent = 'Общая сумма: 0';
   document.getElementById('playAgainBtn').style.display = 'none';
-
-  // Разблокируем поля для ввода
-  betInput.disabled = false;
-  numberInput.disabled = false;
-
-  // Очистка значений (при желании)
-  // betInput.value = '';
-  // numberInput.value = '';
-
-  // сбрасываем флаг
+  // сбрасываем флаг, чтобы можно было играть
   gameInProgress = false;
 };
 
@@ -369,7 +356,7 @@ function throwCubes() {
   const sound = document.getElementById('diceSound');
   if (sound) {
     sound.currentTime = 0;
-    sound.play();
+    sound.play().catch(e => {});
   }
   [cube1, cube2].forEach(cube => {
     cube.style.transition = 'none';
@@ -404,6 +391,7 @@ function setFacePoints(cubeId, faceClass, number) {
   });
 }
 
+// Изначально кубики показывают пусто
 setTimeout(() => {
   setFacePoints('cube1', 'front', 0);
   setFacePoints('cube2', 'front', 0);
