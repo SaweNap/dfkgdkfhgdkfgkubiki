@@ -145,9 +145,31 @@
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
+
+  /* Новое: стиль поверхностного сообщения */
+  #overlayMessage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+    text-align: center;
+    display: none; /* изначально скрыт */
+  }
 </style>
 </head>
 <body>
+
+<!-- Поверхностное сообщение -->
+<div id="overlayMessage"></div>
 
 <!-- Аудио для кубика -->
 <audio id="diceSound" src="https://github.com/SaweNap/dfkgdkfhgdkfgkubiki/blob/main/кубик.mp3" preload="auto"></audio>
@@ -283,22 +305,29 @@ function updateBalanceDisplay() {
   document.getElementById('balanceDisplay').textContent = 'Баланс: ' + currentUser.balance + ' ₽';
 }
 
+function showOverlayMessage(text) {
+  const overlay = document.getElementById('overlayMessage');
+  overlay.innerHTML = text;
+  overlay.style.display = 'flex';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+  }, 2000);
+}
+
 // Обработка кнопки "Начать игру"
 document.getElementById('start-game-btn').onclick = () => {
-  // Перед запуском берем текущие значения
   const bet = parseFloat(betInput.value);
   const guessNumber = parseInt(numberInput.value);
-  
   if (isNaN(bet) || bet <= 0) {
-    alert('Введите корректную ставку');
+    showOverlayMessage('Введите корректную ставку');
     return;
   }
   if (isNaN(guessNumber) || guessNumber < 1 || guessNumber > 12) {
-    alert('Введите число от 1 до 12');
+    showOverlayMessage('Введите число от 1 до 12');
     return;
   }
   if (currentUser.balance < bet) {
-    alert('Баланс недостаточен!');
+    showOverlayMessage('Баланс недостаточен!');
     return;
   }
   startGame(bet, guessNumber);
@@ -309,14 +338,10 @@ async function startGame(bet, guessNumber) {
   gameInProgress = true;
   document.getElementById('result').textContent = '';
 
-  // бросок кубиков
   const sum = Math.ceil(Math.random() * 6) + Math.ceil(Math.random() * 6);
-
-  // Анимация кубиков с звуком
   throwCubes();
 
   setTimeout(async () => {
-    // показываем результат
     setFacePoints('cube1', 'front', Math.ceil(Math.random() * 6));
     setFacePoints('cube2', 'front', Math.ceil(Math.random() * 6));
     document.getElementById('result').textContent = 'Общая сумма: ' + sum;
@@ -332,26 +357,21 @@ async function startGame(bet, guessNumber) {
     updateBalanceDisplay();
     await saveUserBalance();
     gameInProgress = false;
-    // показываем кнопку "Играть снова"
     showPlayAgainButton();
   }, 1500);
 }
 
-// Функция для отображения кнопки "Играть снова"
 function showPlayAgainButton() {
   const btn = document.getElementById('playAgainBtn');
   btn.style.display = 'block';
 }
 
-// Обработка кнопки "Играть снова"
 document.getElementById('playAgainBtn').onclick = () => {
   document.getElementById('result').textContent = 'Общая сумма: 0';
   document.getElementById('playAgainBtn').style.display = 'none';
-  // сбрасываем флаг, чтобы можно было играть
   gameInProgress = false;
 };
 
-// Анимация кубиков
 function throwCubes() {
   const sound = document.getElementById('diceSound');
   if (sound) {
