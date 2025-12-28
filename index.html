@@ -147,35 +147,11 @@
     background: linear-gradient(45deg, #6a11cb, #2575fc);
     color: #fff;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
   }
   #playAgainBtn:hover {
     background: linear-gradient(45deg, #2575fc, #6a11cb);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-  }
-  #playAgainBtn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
-
-  /* Поверхностное сообщение */
-  #overlayMessage {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    font-size: 1.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
-    text-align: center;
-    display: none; /* изначально скрыт */
   }
 </style>
 </head>
@@ -231,31 +207,21 @@ const GITHUB_REPO = 'SaweNap/dfjghdfifgJSON';
 const FILE_PATH = 'users.json';
 
 const balanceDisplay = document.getElementById('balanceDisplay');
-const messageEl = document.getElementById('message');
 const betInput = document.getElementById('bet-input');
 const numberInput = document.getElementById('number-input');
 
-const cube1 = document.querySelector('#cube1');
-const cube2 = document.querySelector('#cube2');
-const resultEl = document.getElementById('result');
 const startGameBtn = document.getElementById('start-game-btn');
 const playAgainBtn = document.getElementById('playAgainBtn');
 
-const sidesPoints = {
-  1: [[0,0]],
-  2: [[-0.6,0.6], [0.6,-0.6]],
-  3: [[-0.6,0.6], [0,0], [0.6,-0.6]],
-  4: [[-0.6,0.6], [-0.6,-0.6], [0.6,0.6], [0.6,-0.6]],
-  5: [[-0.6,0.6], [-0.6,-0.6], [0,0], [0.6,0.6], [0.6,-0.6]],
-  6: [[-0.6,0.6], [-0.6,0], [-0.6,-0.6], [0.6,0.6], [0.6,0], [0.6,-0.6]],
-};
+const cube1 = document.querySelector('#cube1');
+const cube2 = document.querySelector('#cube2');
 
 let currentUser = { id: 'test', balance: 0 };
 let userId = null;
 let users = [];
 let gameInProgress = false;
 
-// Загрузка баланса
+// Загрузка баланса и остальные функции (загружаем и сохраняем баланс, обновляем UI, и т.д.)
 async function loadUserBalance() {
   const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${FILE_PATH}`;
   const response = await fetch(url);
@@ -327,72 +293,6 @@ function showOverlayMessage(text) {
   }, 2000);
 }
 
-// Обработка кнопки "Начать игру"
-document.getElementById('start-game-btn').onclick = () => {
-  if (gameInProgress) return; // блокируем, если игра идет
-  const bet = parseFloat(betInput.value);
-  const guessNumber = parseInt(numberInput.value);
-  if (isNaN(bet) || bet <= 0) {
-    showOverlayMessage('Введите корректную ставку');
-    return;
-  }
-  if (isNaN(guessNumber) || guessNumber < 1 || guessNumber > 12) {
-    showOverlayMessage('Введите число от 1 до 12');
-    return;
-  }
-  if (currentUser.balance < bet) {
-    showOverlayMessage('Баланс недостаточен!');
-    return;
-  }
-  startGame(bet, guessNumber);
-};
-
-async function startGame(bet, guessNumber) {
-  gameInProgress = true; // блокируем повтор запуска
-  document.getElementById('result').textContent = '';
-
-  const sum = Math.ceil(Math.random() * 6) + Math.ceil(Math.random() * 6);
-  throwCubes();
-
-  setTimeout(async () => {
-    // показываем результат кубиков
-    setFacePoints('cube1', 'front', Math.ceil(Math.random() * 6));
-    setFacePoints('cube2', 'front', Math.ceil(Math.random() * 6));
-    document.getElementById('result').textContent = 'Общая сумма: ' + sum;
-
-    if (sum === guessNumber) {
-      currentUser.balance += bet * 3;
-      document.getElementById('result').textContent += ' — Вы выиграли!';
-    } else {
-      currentUser.balance -= bet;
-      if (currentUser.balance < 0) currentUser.balance = 0;
-      document.getElementById('result').textContent += ' — Не угадали!';
-    }
-    updateBalanceDisplay();
-    await saveUserBalance();
-
-    // показываем кнопку для новой игры
-    showPlayAgainButton();
-
-  }, 1500);
-}
-
-function showPlayAgainButton() {
-  document.getElementById('playAgainBtn').style.display = 'block';
-}
-
-document.getElementById('playAgainBtn').onclick = () => {
-  document.getElementById('result').textContent = 'Общая сумма: 0';
-  document.getElementById('playAgainBtn').style.display = 'none';
-  // сбрасываем флаг, чтобы можно было начать игру заново
-  gameInProgress = false;
-  // сброс кубиков
-  setTimeout(() => {
-    setFacePoints('cube1', 'front', 0);
-    setFacePoints('cube2', 'front', 0);
-  }, 100);
-};
-
 // Функции для кубиков
 function throwCubes() {
   const sound = document.getElementById('diceSound');
@@ -404,7 +304,6 @@ function throwCubes() {
     cube.style.transition = 'none';
     cube.classList.remove('fly-rotate');
     setFacePoints(cube.id, 'front', 0);
-    cube.style.backgroundColor = '#fff';
   });
   setTimeout(() => {
     [cube1, cube2].forEach(cube => {
@@ -433,12 +332,86 @@ function setFacePoints(cubeId, faceClass, number) {
   });
 }
 
+// Массив точек для граней кубика
+const sidesPoints = {
+  1: [[0,0]],
+  2: [[-0.6,0.6], [0.6,-0.6]],
+  3: [[-0.6,0.6], [0,0], [0.6,-0.6]],
+  4: [[-0.6,0.6], [-0.6,-0.6], [0.6,0.6], [0.6,-0.6]],
+  5: [[-0.6,0.6], [-0.6,-0.6], [0,0], [0.6,0.6], [0.6,-0.6]],
+  6: [[-0.6,0.6], [-0.6,0], [-0.6,-0.6], [0.6,0.6], [0.6,0], [0.6,-0.6]],
+};
+
 // Изначально кубики показывают пусто
 setTimeout(() => {
   setFacePoints('cube1', 'front', 0);
   setFacePoints('cube2', 'front', 0);
   document.getElementById('result').textContent = 'Общая сумма: 0';
 }, 100);
+
+// Обработка кнопки "Начать игру"
+document.getElementById('start-game-btn').onclick = () => {
+  if (gameInProgress) return; // блокируем повторный запуск
+  const bet = parseFloat(betInput.value);
+  const guessNumber = parseInt(numberInput.value);
+  if (isNaN(bet) || bet <= 0) {
+    showOverlayMessage('Введите корректную ставку');
+    return;
+  }
+  if (isNaN(guessNumber) || guessNumber < 1 || guessNumber > 12) {
+    showOverlayMessage('Введите число от 1 до 12');
+    return;
+  }
+  if (currentUser.balance < bet) {
+    showOverlayMessage('Баланс недостаточен!');
+    return;
+  }
+  startGame(bet, guessNumber);
+};
+
+async function startGame(bet, guessNumber) {
+  if (gameInProgress) return;
+  gameInProgress = true; // блокируем повторный запуск
+  document.getElementById('result').textContent = '';
+
+  throwCubes();
+
+  setTimeout(async () => {
+    const sum = Math.ceil(Math.random() * 6) + Math.ceil(Math.random() * 6);
+    setFacePoints('cube1', 'front', Math.ceil(Math.random() * 6));
+    setFacePoints('cube2', 'front', Math.ceil(Math.random() * 6));
+    document.getElementById('result').textContent = 'Общая сумма: ' + sum;
+
+    if (sum === guessNumber) {
+      currentUser.balance += bet * 3;
+      document.getElementById('result').textContent += ' — Вы выиграли!';
+    } else {
+      currentUser.balance -= bet;
+      if (currentUser.balance < 0) currentUser.balance = 0;
+      document.getElementById('result').textContent += ' — Не угадали!';
+    }
+    updateBalanceDisplay();
+    await saveUserBalance();
+    showPlayAgainButton();
+  }, 1500);
+}
+
+function showPlayAgainButton() {
+  document.getElementById('playAgainBtn').style.display = 'block';
+}
+
+// Обработчик "Играть снова"
+document.getElementById('playAgainBtn').onclick = () => {
+  document.getElementById('result').textContent = 'Общая сумма: 0';
+  document.getElementById('playAgainBtn').style.display = 'none';
+  // Разрешаем запуск новой игры
+  gameInProgress = false;
+  // Сброс кубиков
+  setTimeout(() => {
+    setFacePoints('cube1', 'front', 0);
+    setFacePoints('cube2', 'front', 0);
+  }, 100);
+};
 </script>
 </body>
 </html>
