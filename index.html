@@ -10,16 +10,39 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: start;
     height: 100vh;
     margin: 0;
+    padding-top: 20px;
     font-family: Arial, sans-serif;
     color: #fff;
   }
-  .balance {
+  #balanceContainer {
     font-size: 1.5em;
+    margin-bottom: 10px;
+  }
+  #betSection {
     margin-bottom: 20px;
-    text-shadow: 1px 1px 2px #000;
+  }
+  #betSection input {
+    padding: 8px;
+    font-size: 1.2em;
+    width: 150px;
+    border-radius: 5px;
+    border: none;
+  }
+  #betSection button {
+    padding: 10px 20px;
+    font-size: 1.2em;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: #fff;
+    cursor: pointer;
+  }
+  #betSection button:hover {
+    background-color: #45a049;
   }
   .dice-container {
     display: flex;
@@ -54,9 +77,9 @@
   .front  { transform: rotateY(0deg) translateZ(50px); }
   .back   { transform: rotateY(180deg) translateZ(50px); }
   .right  { transform: rotateY(90deg) translateZ(50px); }
-  .left   { transform: rotateY(-90deg); }
+  .left   { transform: rotateY(-90deg) translateZ(50px); }
   .top    { transform: rotateX(90deg) translateZ(50px); }
-  .bottom { transform: rotateX(-90deg); }
+  .bottom { transform: rotateX(-90deg) translateZ(50px); }
 
   @keyframes flyAndRotate {
     0% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
@@ -66,7 +89,6 @@
   .fly-rotate {
     animation: flyAndRotate 1.2s ease forwards;
   }
-
   button {
     padding: 12px 25px;
     font-size: 1.2em;
@@ -76,32 +98,25 @@
     color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    margin: 10px;
   }
-  button:disabled {
-    background: #888;
-    cursor: not-allowed;
+  button:hover {
+    background: #45a049;
   }
-  #betSection {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 9999;
-  }
-  #betSection input, #betSection select {
-    font-size: 1.2em;
-    margin: 5px 0;
+  #result {
+    font-size: 1.5em;
+    margin-top: 10px;
+    color: #fff;
   }
 </style>
 </head>
 <body>
 
-<div class="balance" id="balanceDisplay">Баланс: 0 ₽</div>
+<div id="balanceContainer">Баланс: <span id="userBalance">0</span> ₽</div>
+
+<div id="betSection">
+  <input type="number" id="betAmount" placeholder="Сумма ставки" />
+  <button id="placeBetBtn">Сделать ставку</button>
+</div>
 
 <div class="dice-container">
   <div class="scene">
@@ -129,132 +144,127 @@
 <button id="rollBtn">Подбросить</button>
 <div id="result">Общая сумма: 0</div>
 
-<!-- Меню для ставки -->
-<div id="betSection">
-  <div>Введите сумму ставки: <input type="number" id="betAmount" min="1" value="30"></div>
-  <div>Выберите число (1-12): 
-    <select id="betNumber"></select>
-  </div>
-  <button id="placeBetBtn">Поставить ставку</button>
-  <button id="cancelBetBtn">Отмена</button>
-</div>
-
 <script>
-// Блокировка Ctrl+колесика
-document.addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+const userId = new URLSearchParams(window.location.search).get('id');
+let userBalance = 0;
 
-// Переменные
-const cube1 = document.querySelector('#cube1');
-const cube2 = document.querySelector('#cube2');
-const resultEl = document.getElementById('result');
-const rollBtn = document.getElementById('rollBtn');
-const balanceEl = document.getElementById('balanceDisplay');
-const betSection = document.getElementById('betSection');
-const betAmountInput = document.getElementById('betAmount');
-const betNumberSelect = document.getElementById('betNumber');
-const placeBetBtn = document.getElementById('placeBetBtn');
-const cancelBetBtn = document.getElementById('cancelBetBtn');
-
-let userBalance = 100; // пример баланса
-let currentUser = { id: '1', balance: 100 }; // пример текущего пользователя
-let users = [];
-// Заполняем список чисел
-for (let i=1; i<=12; i++) {
-  const opt = document.createElement('option');
-  opt.value = i;
-  opt.innerText = i;
-  betNumberSelect.appendChild(opt);
-}
-
-// Обработка кнопки "Подбросить"
-document.getElementById('rollBtn').addEventListener('click', () => {
-  if (!currentUser) {
-    alert('Пользователь не найден. Перезагрузите страницу.');
-    return;
-  }
-  if (userBalance <= 0) {
-    alert('Баланс равен 0. Пополните баланс.');
-    return;
-  }
-  showBetMenu();
-});
-
-function showBetMenu() {
-  document.getElementById('betSection').style.display = 'block';
+// Загрузить баланс
+if (userId) {
+  fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
+    .then(res => res.ok ? res.json() : Promise.reject())
+    .then(users => {
+      const user = users.find(u => u.id.toString() === userId);
+      if (user) {
+        userBalance = user.balance || 0;
+        document.getElementById('userBalance').textContent = userBalance;
+      } else {
+        alert('Пользователь не найден');
+      }
+    })
+    .catch(() => alert('Ошибка загрузки данных'));
+} else {
+  alert('Пользователь не найден');
 }
 
 // Обработка ставки
-placeBetBtn.onclick = async () => {
-  const betSum = parseInt(betAmountInput.value);
-  const chosenNumber = parseInt(betNumberSelect.value);
-  if (isNaN(betSum) || betSum < 1 || betSum > userBalance) {
-    alert('Некорректная сумма ставки или недостаточно средств.');
+const placeBetBtn = document.getElementById('placeBetBtn');
+const betInput = document.getElementById('betAmount');
+const resultDiv = document.getElementById('result');
+
+let currentBet = 0;
+
+document.getElementById('rollBtn').onclick = () => {
+  const bet = parseFloat(betInput.value);
+  if (isNaN(bet) || bet <= 0) {
+    alert('Введите корректную сумму ставки');
     return;
   }
-  // списываем сумму
-  userBalance -= betSum;
-  // закрываем меню
-  document.getElementById('betSection').style.display = 'none';
-
-  // запускаем анимацию кубиков
-  await startDiceAnimation();
-
-  // после анимации показываем результат
-  const roll1 = getRandomNumber();
-  const roll2 = getRandomNumber();
-
-  document.getElementById('result').innerText = 'Общая сумма: ' + (roll1 + roll2);
-  alert('Выпало: ' + roll1 + ' и ' + roll2);
-
-  if (roll1 === chosenNumber || roll2 === chosenNumber) {
-    const winnings = betSum * 3;
-    userBalance += winnings;
-    alert('Поздравляем! Вы выиграли ' + winnings + ' ₽');
-  } else {
-    alert('Пробуйте еще!');
+  if (bet > userBalance) {
+    alert('Недостаточно средств');
+    return;
   }
-  // Обновление баланса
-  // Тут вставьте логику обновления баланса текущего пользователя
-  // например, currentUser.balance = userBalance;
-  // и сохранение данных
+  currentBet = bet;
 
-  // Обновляем вывод баланса
-  // updateBalance();
-};
+  // Запускаем игру и получаем результат
+  const result1 = Math.ceil(Math.random() * 6);
+  const result2 = Math.ceil(Math.random() * 6);
+  const sum = result1 + result2;
 
-cancelBetBtn.onclick = () => {
-  document.getElementById('betSection').style.display = 'none';
-};
+  // Простая логика выигрыша: если сумма 7, выигрыш
+  let win = false;
+  if (sum === 7) {
+    win = true;
+    userBalance += bet; // прибавляем выигрыш
+  } else {
+    userBalance -= bet; // проигрыш
+  }
+  document.getElementById('userBalance').textContent = userBalance;
 
-// Функция запуска анимации кубиков
-async function startDiceAnimation() {
-  return new Promise(resolve => {
-    document.querySelectorAll('.cube').forEach(cube => cube.classList.add('fly-rotate'));
-    setTimeout(() => {
-      document.querySelectorAll('.cube').forEach(cube => cube.classList.remove('fly-rotate'));
-      resolve();
-    }, 1200);
+  // Обновляем баланс в JSON-файле (пример)
+  // Для реальной работы нужен сервер
+  fetch('https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json')
+    .then(res => res.ok ? res.json() : Promise.reject())
+    .then(users => {
+      const userIndex = users.findIndex(u => u.id.toString() === userId);
+      if (userIndex !== -1) {
+        users[userIndex].balance = userBalance;
+        // Обновление файла через API или сервер — нужно реализовать
+        // Для примера просто логируем
+        console.log('Обновленный список пользователей:', users);
+        // Тут обычно отправка PATCH/PUT-запрос на сервер
+      }
+    });
+
+  // Анимация кубиков
+  const cube1 = document.querySelector('#cube1');
+  const cube2 = document.querySelector('#cube2');
+
+  const sidesPoints = {
+    1: [[0,0]],
+    2: [[-0.6,0.6], [0.6,-0.6]],
+    3: [[-0.6,0.6], [0,0], [0.6,-0.6]],
+    4: [[-0.6,0.6], [-0.6,-0.6], [0.6,0.6], [0.6,-0.6]],
+    5: [[-0.6,0.6], [-0.6,-0.6], [0,0], [0.6,0.6], [0.6,-0.6]],
+    6: [[-0.6,0.6], [-0.6,0], [-0.6,-0.6], [0.6,0.6], [0.6,0], [0.6,-0.6]],
+  };
+
+  function setFace(cubeId, number) {
+    const face = document.querySelector(`#${cubeId} .front`);
+    face.innerHTML = '';
+    if (number === 0) return;
+    const points = sidesPoints[number];
+    const dotSize = 8;
+    const offset = 30;
+    points.forEach(coord => {
+      const dot = document.createElement('div');
+      dot.style.width = `${dotSize}px`;
+      dot.style.height = `${dotSize}px`;
+      dot.style.backgroundColor = 'black';
+      dot.style.borderRadius = '50%';
+      dot.style.position = 'absolute';
+      dot.style.left = `calc(50% + ${coord[0] * offset}px - ${dotSize/2}px)`;
+      dot.style.top = `calc(50% + ${coord[1] * offset}px - ${dotSize/2}px)`;
+      face.appendChild(dot);
+    });
+  }
+
+  // Анимация
+  [cube1, cube2].forEach(cube => {
+    cube.style.transition = 'none';
+    cube.classList.remove('fly-rotate');
+    setFace(cube.id, 0);
   });
-}
-
-// Изначально установка лиц кубиков
-setTimeout(() => {
-  setFacePoints('cube1', 'front', 0);
-  setFacePoints('cube2', 'front', 0);
-  document.getElementById('result').innerText = 'Общая сумма: 0';
-}, 100);
-
-// Функция для отображения точек на лицах кубика
-function setFacePoints(cubeId, faceClass, number) {
-  const face = document.querySelector(`#${cubeId} .${faceClass}`);
-  face.innerHTML = '';
-  // сюда добавьте код для отображения точек
-}
-
-// Ваша функция для рандомных чисел
-function getRandomNumber() {
-  return Math.ceil(Math.random() * 6);
-}
+  [cube1, cube2].forEach(cube => {
+    setTimeout(() => {
+      cube.classList.add('fly-rotate');
+    }, 50);
+  });
+  setTimeout(() => {
+    setFace('cube1', result1);
+    setFace('cube2', result2);
+    document.getElementById('result').textContent = 'Общая сумма: ' + sum;
+  }, 600);
+};
 </script>
 </body>
 </html>
