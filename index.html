@@ -127,7 +127,6 @@
 </div>
 
 <button id="rollBtn">Подбросить</button>
-
 <div id="result">Общая сумма: 0</div>
 
 <!-- Меню для ставки -->
@@ -156,125 +155,25 @@ const betNumberSelect = document.getElementById('betNumber');
 const placeBetBtn = document.getElementById('placeBetBtn');
 const cancelBetBtn = document.getElementById('cancelBetBtn');
 
-let userBalance = 0;
-let currentUser = null;
+let userBalance = 100; // пример баланса
+let currentUser = { id: '1', balance: 100 }; // пример текущего пользователя
 let users = [];
-const userIdFromUrl = new URLSearchParams(window.location.search).get('id');
-
+// Заполняем список чисел
 for (let i=1; i<=12; i++) {
-  const option = document.createElement('option');
-  option.value = i;
-  option.innerText = i;
-  betNumberSelect.appendChild(option);
-}
-
-// Функции для работы с JSON на GitHub
-async function loadUsers() {
-  const url = 'https://raw.githubusercontent.com/SaweNap/dfjghdfifgJSON/main/users.json';
-  const res = await fetch(url);
-  if (res.ok) {
-    return await res.json();
-  } else {
-    return [];
-  }
-}
-
-async function saveUsers(usersData) {
-  const apiUrl = 'https://api.github.com/repos/SaweNap/dfjghdfifgJSON/contents/users.json';
-  const token = 'ghp_jf0qnvZWZ1hnSit6AG2DlS9Croa9781nNnGgIN';
-
-  const res = await fetch(apiUrl, {
-    headers: {
-      'Authorization': 'token ' + token,
-      'Accept': 'application/vnd.github.v3+json'
-    }
-  });
-  if (!res.ok) return false;
-  const data = await res.json();
-  const sha = data.sha;
-  const content = btoa(JSON.stringify(usersData));
-
-  const putRes = await fetch(apiUrl, {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'token ' + token,
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify({
-      message: 'Обновление users.json при /start',
-      content: content,
-      sha: sha
-    })
-  });
-  return putRes.ok;
-}
-
-(async () => {
-  users = await loadUsers();
-  if (userIdFromUrl) {
-    currentUser = users.find(u => u.id.toString() === userIdFromUrl);
-    if (currentUser) {
-      userBalance = currentUser.balance || 0;
-    } else {
-      currentUser = {
-        id: userIdFromUrl,
-        nickname: '', 
-        balance: 0
-      };
-      users.push(currentUser);
-      await saveUsers(users);
-    }
-    updateBalance();
-    checkBalance();
-  }
-})();
-
-function updateBalance() {
-  balanceEl.innerText = 'Баланс: ' + userBalance + ' ₽';
-}
-
-function checkBalance() {
-  if (userBalance <= 0) {
-    rollBtn.disabled = true;
-    showAddBalanceButton();
-  } else {
-    rollBtn.disabled = false;
-    hideAddBalanceButton();
-  }
-}
-
-let addBalanceBtn = null;
-function showAddBalanceButton() {
-  if (!addBalanceBtn) {
-    addBalanceBtn = document.createElement('button');
-    addBalanceBtn.innerText = 'Пополнить баланс';
-    addBalanceBtn.onclick = () => {
-      userBalance += 100; // пример пополнения
-      if (currentUser) {
-        currentUser.balance = userBalance;
-        saveUsers(users);
-      }
-      updateBalance();
-      checkBalance();
-    };
-    document.body.appendChild(addBalanceBtn);
-  }
-}
-function hideAddBalanceButton() {
-  if (addBalanceBtn) {
-    document.body.removeChild(addBalanceBtn);
-    addBalanceBtn = null;
-  }
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.innerText = i;
+  betNumberSelect.appendChild(opt);
 }
 
 // Обработка кнопки "Подбросить"
 document.getElementById('rollBtn').addEventListener('click', () => {
   if (!currentUser) {
-    alert('Пользователь не найден. Пожалуйста, перезагрузите страницу или войдите снова.');
+    alert('Пользователь не найден. Перезагрузите страницу.');
     return;
   }
   if (userBalance <= 0) {
-    alert('Баланс равен 0. Пополните баланс для игры.');
+    alert('Баланс равен 0. Пополните баланс.');
     return;
   }
   showBetMenu();
@@ -284,6 +183,7 @@ function showBetMenu() {
   document.getElementById('betSection').style.display = 'block';
 }
 
+// Обработка ставки
 placeBetBtn.onclick = async () => {
   const betSum = parseInt(betAmountInput.value);
   const chosenNumber = parseInt(betNumberSelect.value);
@@ -291,7 +191,7 @@ placeBetBtn.onclick = async () => {
     alert('Некорректная сумма ставки или недостаточно средств.');
     return;
   }
-  // списываем ставку
+  // списываем сумму
   userBalance -= betSum;
   // закрываем меню
   document.getElementById('betSection').style.display = 'none';
@@ -313,24 +213,21 @@ placeBetBtn.onclick = async () => {
   } else {
     alert('Пробуйте еще!');
   }
+  // Обновление баланса
+  // Тут вставьте логику обновления баланса текущего пользователя
+  // например, currentUser.balance = userBalance;
+  // и сохранение данных
 
-  // обновляем баланс
-  if (currentUser) {
-    currentUser.balance = userBalance;
-    await saveUsers(users);
-  }
-  updateBalance();
-  checkBalance();
+  // Обновляем вывод баланса
+  // updateBalance();
 };
 
 cancelBetBtn.onclick = () => {
   document.getElementById('betSection').style.display = 'none';
 };
 
-// функция запуска анимации кубиков
+// Функция запуска анимации кубиков
 async function startDiceAnimation() {
-  // добавьте сюда код, который запускает анимацию кубиков
-  // например, добавление класса с анимацией и ожидание ее завершения
   return new Promise(resolve => {
     document.querySelectorAll('.cube').forEach(cube => cube.classList.add('fly-rotate'));
     setTimeout(() => {
@@ -347,12 +244,14 @@ setTimeout(() => {
   document.getElementById('result').innerText = 'Общая сумма: 0';
 }, 100);
 
+// Функция для отображения точек на лицах кубика
 function setFacePoints(cubeId, faceClass, number) {
   const face = document.querySelector(`#${cubeId} .${faceClass}`);
   face.innerHTML = '';
-  // Тут добавьте код для отображения чисел на лицах кубика
+  // сюда добавьте код для отображения точек
 }
 
+// Ваша функция для рандомных чисел
 function getRandomNumber() {
   return Math.ceil(Math.random() * 6);
 }
