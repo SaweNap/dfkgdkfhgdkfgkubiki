@@ -153,6 +153,25 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.4);
   }
+
+  /* Добавляем стили для overlayMessage */
+  #overlayMessage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none; /* по умолчанию скрыт */
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3); /* полупрозрачный фон */
+    color: #fff;
+    font-size: 2em;
+    z-index: 9999; /* поверх всего */
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
 </style>
 </head>
 <body>
@@ -287,9 +306,9 @@ function updateBalanceDisplay() {
 function showOverlayMessage(text) {
   const overlay = document.getElementById('overlayMessage');
   overlay.innerHTML = text;
-  overlay.style.display = 'flex';
+  overlay.style.display = 'flex'; // делаем видимым
   setTimeout(() => {
-    overlay.style.display = 'none';
+    overlay.style.display = 'none'; // скрываем через 2 секунды
   }, 2000);
 }
 
